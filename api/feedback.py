@@ -13,7 +13,7 @@ except ImportError:
     TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
-    from transformers import AutoTokenizer
+    from tokenizers import Tokenizer
     if "Qwen3" in model_name:
         fallback = "Qwen/Qwen2.5-1.5B-Instruct"
     elif "Llama-3" in model_name:
@@ -22,10 +22,13 @@ def get_tokenizer_wrapper(model_name: str):
         fallback = model_name
 
     try:
-        return AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        return Tokenizer.from_pretrained(model_name)
     except:
         print(f"Warning: Failed to load tokenizer for {model_name}, falling back to {fallback}")
-        return AutoTokenizer.from_pretrained(fallback, trust_remote_code=True)
+        try:
+            return Tokenizer.from_pretrained(fallback)
+        except:
+            return Tokenizer.from_pretrained("gpt2")
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -53,12 +56,10 @@ class handler(BaseHTTPRequestHandler):
             service_client = tinker.ServiceClient()
             target_text = ""
 
-            # Synthetic Reasoning Logic
             if feedback_type == 'negative':
                  if not correct_output:
                      raise ValueError("Correct output required for negative feedback")
 
-                 # Synthesize
                  client = service_client.create_sampling_client(base_model=base_model_name)
                  tokenizer = get_tokenizer_wrapper(base_model_name)
 
@@ -69,15 +70,8 @@ class handler(BaseHTTPRequestHandler):
                     "Do not output the final answer, only the reasoning steps."
                  )
 
-                 try:
-                    msgs = [
-                        {"role": "system", "content": sys_prompt},
-                        {"role": "user", "content": meta_prompt}
-                    ]
-                    p_str = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-                    t_toks = tokenizer.encode(p_str)
-                 except:
-                    t_toks = tokenizer.encode(sys_prompt + "\n" + meta_prompt)
+                 full_text = sys_prompt + "\n" + meta_prompt
+                 t_toks = tokenizer.encode(full_text).ids
 
                  m_input = types.ModelInput.from_ints(tokens=t_toks)
                  params = types.SamplingParams(max_tokens=1024, temperature=0.7)
@@ -91,10 +85,8 @@ class handler(BaseHTTPRequestHandler):
                  cot = tokenizer.decode(res.sequences[0].tokens, skip_special_tokens=True)
                  target_text = f"{cot}\n\nAnswer: {correct_output}"
 
-            # Prepare Training Examples
             examples = []
 
-            # 1. The original generation
             if tokens and logprobs:
                  examples.append({
                      "prompt_text": prompt,
@@ -103,7 +95,6 @@ class handler(BaseHTTPRequestHandler):
                      "advantage": 1.0 if feedback_type == 'positive' else -1.0
                  })
 
-            # 2. The Synthetic Correction
             if feedback_type == 'negative':
                  examples.append({
                      "prompt_text": prompt,
@@ -111,7 +102,6 @@ class handler(BaseHTTPRequestHandler):
                      "advantage": 1.0
                  })
 
-            # Train Step
             training_client = await service_client.create_lora_training_client_async(base_model=base_model_name, rank=32)
 
             if current_model_id.startswith("tinker://"):
@@ -131,16 +121,10 @@ class handler(BaseHTTPRequestHandler):
                 lp = ex.get("logprobs")
                 adv = ex.get("advantage")
 
-                # Tokenize prompt
-                try:
-                    msgs = [{"role": "user", "content": p_text}]
-                    p_str = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-                    p_toks = tokenizer.encode(p_str)
-                except:
-                    p_toks = tokenizer.encode(p_text)
+                p_toks = tokenizer.encode(p_text).ids
 
                 if not c_toks:
-                    c_toks = tokenizer.encode(c_text)
+                    c_toks = tokenizer.encode(c_text).ids
 
                 full = p_toks + c_toks
                 inp_ids = full[:-1]
@@ -171,7 +155,6 @@ class handler(BaseHTTPRequestHandler):
                 datum = types.Datum(model_input=types.ModelInput.from_ints(tokens=inp_ids), loss_fn_inputs=loss_in)
                 data_batch.append((datum, lfn))
 
-            # Execute Training
             new_id = current_model_id
 
             batches = {}
@@ -198,8 +181,6 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             base_model_name, new_model_id = asyncio.run(process_feedback())
-
-            # Update Registry
             update_model_entry(model_alias, base_model_name, new_model_id)
 
             self.send_response(200)
