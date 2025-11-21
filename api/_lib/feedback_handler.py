@@ -1,12 +1,12 @@
 import json
 import os
 import asyncio
-from api.lib.model_utils import resolve_model_alias
-from api.lib.registry import update_model_entry
+from api._lib.model_utils import resolve_model_alias
+from api._lib.registry import update_model_entry
 
 try:
-    from api import tinker
-    from api.tinker import types
+    from api import _tinker as tinker
+    from api._tinker import types
     TINKER_AVAILABLE = True
 except ImportError:
     try:

@@ -1,8 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
-from api.lib.models_handler import handle_models
-from api.lib.chat_handler import handle_chat
-from api.lib.feedback_handler import handle_feedback
+from api._lib.models_handler import handle_models
+from api._lib.chat_handler import handle_chat
+from api._lib.feedback_handler import handle_feedback
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):

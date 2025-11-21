@@ -2,7 +2,7 @@
 import json
 import asyncio
 try:
-    from api import tinker
+    from api import _tinker as tinker
     TINKER_AVAILABLE = True
 except ImportError:
     try:
