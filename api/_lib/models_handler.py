@@ -1,6 +1,9 @@
 # Refactored models handler to be a function, not a class
 import json
 import asyncio
+import traceback
+from concurrent.futures import ThreadPoolExecutor
+
 try:
     from api import _tinker as tinker
     TINKER_AVAILABLE = True
@@ -48,18 +51,43 @@ async def list_models():
 
     return {"models": models}
 
+def run_async(coro):
+    """Runs an async coroutine in a way that works even if an event loop is already running."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        # If we are in a running loop, we can't use asyncio.run().
+        # We spawn a thread to run the coroutine in a new loop.
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        return asyncio.run(coro)
 
 def handle_models(req_handler):
-    if req_handler.command != "GET":
-        req_handler.send_response(405)
+    try:
+        if req_handler.command != "GET":
+            req_handler.send_response(405)
+            req_handler.end_headers()
+            return
+
+        result = run_async(list_models())
+        # Since we always return a list (fallback or real), status is 200
+        status = 200
+
+        req_handler.send_response(status)
+        req_handler.send_header('Content-Type', 'application/json')
         req_handler.end_headers()
-        return
-
-    result = asyncio.run(list_models())
-    # Since we always return a list (fallback or real), status is 200
-    status = 200
-
-    req_handler.send_response(status)
-    req_handler.send_header('Content-Type', 'application/json')
-    req_handler.end_headers()
-    req_handler.wfile.write(json.dumps(result).encode())
+        req_handler.wfile.write(json.dumps(result).encode())
+    except Exception as e:
+        req_handler.send_response(500)
+        req_handler.send_header('Content-Type', 'application/json')
+        req_handler.end_headers()
+        error_response = {
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
+        req_handler.wfile.write(json.dumps(error_response).encode())
