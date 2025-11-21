@@ -3,15 +3,15 @@ module.exports = {
     return [
       {
         source: '/api/chat/completions',
-        destination: '/api/chat/completions',
+        destination: '/api',
       },
       {
         source: '/api/feedback',
-        destination: '/api/feedback',
+        destination: '/api',
       },
       {
         source: '/api/models',
-        destination: '/api/models',
+        destination: '/api',
       },
     ]
   },
