@@ -1,0 +1,6 @@
+tinker
+git+https://github.com/thinking-machines-lab/tinker.git
+transformers
+torch
+numpy
+vercel-kv-sdk
