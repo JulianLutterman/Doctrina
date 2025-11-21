@@ -1,0 +1,2 @@
+tinker==0.5.1
+tinker-cookbook==0.1.0
