@@ -15,15 +15,15 @@ from typing import Any, Awaitable, Callable, TypeVar
 
 import httpx
 
-from tinker import types
-from tinker._client import AsyncTinker
-from tinker._exceptions import APIConnectionError, APIStatusError
-from tinker._version import __version__ as tinker_sdk_version
-from tinker.lib.async_tinker_provider import AsyncTinkerProvider
-from tinker.lib.client_connection_pool_type import ClientConnectionPoolType
-from tinker.lib.public_interfaces.api_future import AwaitableConcurrentFuture
-from tinker.lib.telemetry import Telemetry, init_telemetry, is_user_error
-from tinker.lib.telemetry_provider import TelemetryProvider
+from api._tinker import types
+from api._tinker._client import AsyncTinker
+from api._tinker._exceptions import APIConnectionError, APIStatusError
+from api._tinker._version import __version__ as tinker_sdk_version
+from api._tinker.lib.async_tinker_provider import AsyncTinkerProvider
+from api._tinker.lib.client_connection_pool_type import ClientConnectionPoolType
+from api._tinker.lib.public_interfaces.api_future import AwaitableConcurrentFuture
+from api._tinker.lib.telemetry import Telemetry, init_telemetry, is_user_error
+from api._tinker.lib.telemetry_provider import TelemetryProvider
 
 logger = logging.getLogger(__name__)
 

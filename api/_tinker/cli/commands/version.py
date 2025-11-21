@@ -11,7 +11,7 @@ def cli():
     """Show version information."""
     try:
         # Lazy import version only when needed
-        from tinker._version import __version__
+        from api._tinker._version import __version__
 
         click.echo(f"tinker {__version__}")
     except ImportError:

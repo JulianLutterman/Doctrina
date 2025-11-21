@@ -10,21 +10,21 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Callable, List, Type, TypeVar, cast
 
-import tinker
-from tinker import types
-from tinker._exceptions import RequestFailedError
-from tinker.lib.client_connection_pool_type import ClientConnectionPoolType
-from tinker.lib.public_interfaces.api_future import APIFuture
-from tinker.lib.telemetry import Telemetry, is_user_error
-from tinker.types import RequestErrorCategory
-from tinker.types.future_retrieve_request import FutureRetrieveRequest
+from api import _tinker as tinker
+from api._tinker import types
+from api._tinker._exceptions import RequestFailedError
+from api._tinker.lib.client_connection_pool_type import ClientConnectionPoolType
+from api._tinker.lib.public_interfaces.api_future import APIFuture
+from api._tinker.lib.telemetry import Telemetry, is_user_error
+from api._tinker.types import RequestErrorCategory
+from api._tinker.types.future_retrieve_request import FutureRetrieveRequest
 
 from .._models import BaseModel
 from .retryable_exception import RetryableException
 from .sync_only import sync_only
 
 if TYPE_CHECKING:
-    from tinker.lib.internal_client_holder import InternalClientHolder
+    from api._tinker.lib.internal_client_holder import InternalClientHolder
 
 logger = logging.getLogger(__name__)
 

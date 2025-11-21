@@ -10,13 +10,16 @@ from contextlib import asynccontextmanager
 from functools import cache
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generator, List, Tuple
 
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 
-from tinker import types
-from tinker.lib.client_connection_pool_type import ClientConnectionPoolType
-from tinker.lib.public_interfaces.api_future import APIFuture, AwaitableConcurrentFuture
-from tinker.lib.telemetry import Telemetry, capture_exceptions
-from tinker.lib.telemetry_provider import TelemetryProvider
+from api._tinker import types
+from api._tinker.lib.client_connection_pool_type import ClientConnectionPoolType
+from api._tinker.lib.public_interfaces.api_future import APIFuture, AwaitableConcurrentFuture
+from api._tinker.lib.telemetry import Telemetry, capture_exceptions
+from api._tinker.lib.telemetry_provider import TelemetryProvider
 
 from ..api_future_impl import (
     QueueState,
@@ -285,7 +288,8 @@ class TrainingClient(TelemetryProvider, QueueStateObserver):
     async def forward_backward_custom_async(
         self, data: List[types.Datum], loss_fn: CustomLossFnV1
     ) -> APIFuture[types.ForwardBackwardOutput]:
-        import torch
+        if torch is None:
+            raise ImportError("torch is not installed")
 
         # First do a forward pass and get logprobs
         forward_future = await self.forward_async(data, "cross_entropy")
@@ -586,7 +590,11 @@ class TrainingClient(TelemetryProvider, QueueStateObserver):
 
 def _get_tokenizer(model_id: types.ModelID, holder: InternalClientHolder) -> PreTrainedTokenizer:
     # call get_info on model_id
-    from transformers.models.auto.tokenization_auto import AutoTokenizer
+    try:
+        from transformers.models.auto.tokenization_auto import AutoTokenizer
+    except ImportError:
+        AutoTokenizer = None
+
     try:
         from tml_tokenizers import get_tinker_tokenizer
     except ImportError:
@@ -627,4 +635,6 @@ def _get_tokenizer(model_id: types.ModelID, holder: InternalClientHolder) -> Pre
     if (tokenizer := get_tinker_tokenizer(tokenizer_id)) is not None:
         return tokenizer
 
+    if AutoTokenizer is None:
+        raise ImportError("transformers is not installed")
     return AutoTokenizer.from_pretrained(tokenizer_id, fast=True, **kwargs)

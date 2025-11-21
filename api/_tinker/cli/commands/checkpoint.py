@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, List
 import click
 
 if TYPE_CHECKING:
-    from tinker.types import Checkpoint
+    from api._tinker.types import Checkpoint
 
 from ..client import create_rest_client, handle_api_errors
 from ..context import CLIContext
@@ -226,7 +226,7 @@ def get_checkpoint_from_path(checkpoint_path: str) -> "Checkpoint":
         TinkerCliError: If the checkpoint cannot be retrieved
     """
     # Lazy import
-    from tinker import ParsedCheckpointTinkerPath
+    from api._tinker import ParsedCheckpointTinkerPath
 
     try:
         parsed = ParsedCheckpointTinkerPath.from_tinker_path(checkpoint_path)

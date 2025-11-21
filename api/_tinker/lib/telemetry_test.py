@@ -11,15 +11,15 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import httpx
 import pytest
 
-from tinker._exceptions import (
+from api._tinker._exceptions import (
     APIStatusError,
     BadRequestError,
     ConflictError,
     UnprocessableEntityError,
 )
-from tinker.lib.client_connection_pool_type import ClientConnectionPoolType
-from tinker.lib.public_interfaces.api_future import AwaitableConcurrentFuture
-from tinker.lib.telemetry import (
+from api._tinker.lib.client_connection_pool_type import ClientConnectionPoolType
+from api._tinker.lib.public_interfaces.api_future import AwaitableConcurrentFuture
+from api._tinker.lib.telemetry import (
     MAX_BATCH_SIZE,
     MAX_QUEUE_SIZE,
     Telemetry,
@@ -27,14 +27,14 @@ from tinker.lib.telemetry import (
     capture_exceptions,
     init_telemetry,
 )
-from tinker.lib.telemetry_provider import TelemetryProvider
-from tinker.types.generic_event import GenericEvent
-from tinker.types.session_end_event import SessionEndEvent
-from tinker.types.session_start_event import SessionStartEvent
-from tinker.types.telemetry_batch import TelemetryBatch
-from tinker.types.telemetry_event import TelemetryEvent
-from tinker.types.telemetry_response import TelemetryResponse
-from tinker.types.unhandled_exception_event import UnhandledExceptionEvent
+from api._tinker.lib.telemetry_provider import TelemetryProvider
+from api._tinker.types.generic_event import GenericEvent
+from api._tinker.types.session_end_event import SessionEndEvent
+from api._tinker.types.session_start_event import SessionStartEvent
+from api._tinker.types.telemetry_batch import TelemetryBatch
+from api._tinker.types.telemetry_event import TelemetryEvent
+from api._tinker.types.telemetry_response import TelemetryResponse
+from api._tinker.types.unhandled_exception_event import UnhandledExceptionEvent
 
 # pyright: reportMissingParameterType=false
 # pyright: reportOptionalMemberAccess=false

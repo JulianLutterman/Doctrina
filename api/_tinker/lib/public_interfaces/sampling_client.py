@@ -10,12 +10,12 @@ from concurrent.futures import Future as ConcurrentFuture
 from functools import lru_cache
 from typing import TYPE_CHECKING, TypeVar, cast
 
-import tinker
-from tinker import types
-from tinker.lib.client_connection_pool_type import ClientConnectionPoolType
-from tinker.lib.public_interfaces.api_future import APIFuture, AwaitableConcurrentFuture
-from tinker.lib.telemetry import Telemetry, capture_exceptions
-from tinker.lib.telemetry_provider import TelemetryProvider
+from api import _tinker as tinker
+from api._tinker import types
+from api._tinker.lib.client_connection_pool_type import ClientConnectionPoolType
+from api._tinker.lib.public_interfaces.api_future import APIFuture, AwaitableConcurrentFuture
+from api._tinker.lib.telemetry import Telemetry, capture_exceptions
+from api._tinker.lib.telemetry_provider import TelemetryProvider
 
 from ..api_future_impl import QueueState, QueueStateObserver, _APIFuture
 from ..retry_handler import RetryConfig, RetryHandler

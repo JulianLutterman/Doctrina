@@ -19,18 +19,18 @@ from typing import (
 )
 from uuid import uuid4
 
-from tinker._exceptions import APIError, RequestFailedError
-from tinker._version import __version__
-from tinker.types import RequestErrorCategory
-from tinker.types.generic_event import GenericEvent
-from tinker.types.session_end_event import SessionEndEvent
-from tinker.types.session_start_event import SessionStartEvent
-from tinker.types.severity import Severity
-from tinker.types.telemetry_batch import TelemetryBatch
-from tinker.types.telemetry_event import TelemetryEvent
-from tinker.types.telemetry_response import TelemetryResponse
-from tinker.types.telemetry_send_request import TelemetrySendRequest
-from tinker.types.unhandled_exception_event import UnhandledExceptionEvent
+from api._tinker._exceptions import APIError, RequestFailedError
+from api._tinker._version import __version__
+from api._tinker.types import RequestErrorCategory
+from api._tinker.types.generic_event import GenericEvent
+from api._tinker.types.session_end_event import SessionEndEvent
+from api._tinker.types.session_start_event import SessionStartEvent
+from api._tinker.types.severity import Severity
+from api._tinker.types.telemetry_batch import TelemetryBatch
+from api._tinker.types.telemetry_event import TelemetryEvent
+from api._tinker.types.telemetry_response import TelemetryResponse
+from api._tinker.types.telemetry_send_request import TelemetrySendRequest
+from api._tinker.types.unhandled_exception_event import UnhandledExceptionEvent
 
 from .async_tinker_provider import AsyncTinkerProvider
 from .client_connection_pool_type import ClientConnectionPoolType
