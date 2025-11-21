@@ -9,12 +9,12 @@ try:
     from api import _tinker as tinker
     from api._tinker import types
     TINKER_AVAILABLE = True
-except ImportError:
+except Exception:
     try:
         import tinker
         from tinker import types
         TINKER_AVAILABLE = True
-    except ImportError:
+    except Exception:
         TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):

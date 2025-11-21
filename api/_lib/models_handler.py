@@ -7,11 +7,13 @@ from concurrent.futures import ThreadPoolExecutor
 try:
     from api import _tinker as tinker
     TINKER_AVAILABLE = True
-except ImportError:
+except Exception:
+    # Catch ImportError, SyntaxError, TypeError, etc.
+    # If the environment is incompatible (e.g. old python version), we fall back.
     try:
         import tinker
         TINKER_AVAILABLE = True
-    except ImportError:
+    except Exception:
         TINKER_AVAILABLE = False
 
 FALLBACK_MODELS = [
