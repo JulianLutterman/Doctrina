@@ -5,11 +5,16 @@ import asyncio
 from api.lib.model_utils import resolve_model_alias
 
 try:
-    import tinker
-    from tinker import types
+    from api import tinker
+    from api.tinker import types
     TINKER_AVAILABLE = True
 except ImportError:
-    TINKER_AVAILABLE = False
+    try:
+        import tinker
+        from tinker import types
+        TINKER_AVAILABLE = True
+    except ImportError:
+        TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
     from tokenizers import Tokenizer
@@ -27,7 +32,6 @@ def get_tokenizer_wrapper(model_name: str):
         try:
             return Tokenizer.from_pretrained(fallback)
         except:
-            # Ultimate fallback if even fallback fails (e.g. gated)
             return Tokenizer.from_pretrained("gpt2")
 
 class handler(BaseHTTPRequestHandler):
@@ -48,12 +52,6 @@ class handler(BaseHTTPRequestHandler):
         async def handle_async():
             base_model_name, model_to_use = await resolve_model_alias(model_alias)
 
-            last_message = messages[-1]
-            prompt_text = last_message["content"]
-
-            sys_msg = next((m for m in messages if m["role"] == "system"), None)
-            sys_prompt = sys_msg["content"] if sys_msg else None
-
             service_client = tinker.ServiceClient()
 
             if model_to_use.startswith("tinker://"):
@@ -63,10 +61,24 @@ class handler(BaseHTTPRequestHandler):
 
             tokenizer = get_tokenizer_wrapper(base_model_name)
 
-            # Simple concatenation (tokenizers doesn't have apply_chat_template)
-            full_text = (sys_prompt + "\n" if sys_prompt else "") + prompt_text
+            # Construct full prompt with history
+            full_text = ""
+            for msg in messages:
+                role = msg.get("role")
+                content = msg.get("content", "")
+                if role == "system":
+                    full_text += f"{content}\n"
+                elif role == "user":
+                    full_text += f"User: {content}\nAssistant: "
+                elif role == "assistant":
+                    full_text += f"{content}\n"
 
-            # tokenizers encode returns Encoding object
+            # If last message was user, it ends with "Assistant: "
+            # If prompt ended differently, ensure we prompt for completion.
+            if messages[-1]["role"] == "user":
+                 pass # Already added "Assistant: "
+
+            # encoding
             encoding = tokenizer.encode(full_text)
             tokens = encoding.ids
 

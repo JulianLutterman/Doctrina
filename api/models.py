@@ -3,13 +3,17 @@ import json
 import os
 from typing import List
 
-# Mock or Import Tinker
 try:
-    import tinker
-    from tinker import types
+    from api import tinker
+    from api.tinker import types
     TINKER_AVAILABLE = True
 except ImportError:
-    TINKER_AVAILABLE = False
+    try:
+        import tinker
+        from tinker import types
+        TINKER_AVAILABLE = True
+    except ImportError:
+        TINKER_AVAILABLE = False
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -20,9 +24,6 @@ class handler(BaseHTTPRequestHandler):
              return
 
         try:
-            # This needs to be async? Vercel Python functions are sync by default unless using ASGI?
-            # Tinker SDK is async.
-            # We can use asyncio.run()
             import asyncio
 
             async def list_models():

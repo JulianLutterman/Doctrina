@@ -6,11 +6,16 @@ from api.lib.model_utils import resolve_model_alias
 from api.lib.registry import update_model_entry
 
 try:
-    import tinker
-    from tinker import types
+    from api import tinker
+    from api.tinker import types
     TINKER_AVAILABLE = True
 except ImportError:
-    TINKER_AVAILABLE = False
+    try:
+        import tinker
+        from tinker import types
+        TINKER_AVAILABLE = True
+    except ImportError:
+        TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
     from tokenizers import Tokenizer

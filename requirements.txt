@@ -1,4 +1,3 @@
 numpy
 tokenizers
 vercel-kv-sdk
-git+https://github.com/thinking-machines-lab/tinker.git
