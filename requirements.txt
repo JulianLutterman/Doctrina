@@ -1,6 +1,6 @@
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 torch==2.2.1+cpu
-transformers
+tokenizers
 numpy
 vercel-kv-sdk
 git+https://github.com/thinking-machines-lab/tinker.git

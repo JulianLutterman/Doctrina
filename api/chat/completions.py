@@ -12,7 +12,7 @@ except ImportError:
     TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
-    from transformers import AutoTokenizer
+    from tokenizers import Tokenizer
     if "Qwen3" in model_name:
         fallback = "Qwen/Qwen2.5-1.5B-Instruct"
     elif "Llama-3" in model_name:
@@ -21,10 +21,14 @@ def get_tokenizer_wrapper(model_name: str):
         fallback = model_name
 
     try:
-        return AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+        return Tokenizer.from_pretrained(model_name)
     except:
         print(f"Warning: Failed to load tokenizer for {model_name}, falling back to {fallback}")
-        return AutoTokenizer.from_pretrained(fallback, trust_remote_code=True)
+        try:
+            return Tokenizer.from_pretrained(fallback)
+        except:
+            # Ultimate fallback if even fallback fails (e.g. gated)
+            return Tokenizer.from_pretrained("gpt2")
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -41,11 +45,9 @@ class handler(BaseHTTPRequestHandler):
              self.wfile.write(json.dumps({"error": "Missing model or messages"}).encode())
              return
 
-        # Async execution wrapper
         async def handle_async():
             base_model_name, model_to_use = await resolve_model_alias(model_alias)
 
-            # Prompt extraction
             last_message = messages[-1]
             prompt_text = last_message["content"]
 
@@ -61,17 +63,12 @@ class handler(BaseHTTPRequestHandler):
 
             tokenizer = get_tokenizer_wrapper(base_model_name)
 
-            msgs = []
-            if sys_prompt:
-                msgs.append({"role": "system", "content": sys_prompt})
-            msgs.append({"role": "user", "content": prompt_text})
+            # Simple concatenation (tokenizers doesn't have apply_chat_template)
+            full_text = (sys_prompt + "\n" if sys_prompt else "") + prompt_text
 
-            try:
-                prompt_str = tokenizer.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-                tokens = tokenizer.encode(prompt_str)
-            except:
-                full_text = (sys_prompt + "\n" if sys_prompt else "") + prompt_text
-                tokens = tokenizer.encode(full_text)
+            # tokenizers encode returns Encoding object
+            encoding = tokenizer.encode(full_text)
+            tokens = encoding.ids
 
             model_input = types.ModelInput.from_ints(tokens=tokens)
             params = types.SamplingParams(max_tokens=512, temperature=0.7)
