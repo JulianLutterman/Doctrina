@@ -1,3 +1,8 @@
 numpy
 tokenizers
 vercel-kv-sdk
+pydantic>=2.0
+httpx[http2]
+anyio
+distro
+typing-extensions

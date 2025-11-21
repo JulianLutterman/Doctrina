@@ -16,8 +16,8 @@ from typing import Any, Awaitable, Callable, Generic, Type, TypeVar
 
 import httpx
 
-import tinker
-from tinker.lib.telemetry import Telemetry, is_user_error
+from api import _tinker as tinker
+from api._tinker.lib.telemetry import Telemetry, is_user_error
 
 from .._constants import (
     DEFAULT_CONNECTION_LIMITS,

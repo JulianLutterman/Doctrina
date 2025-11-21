@@ -10,7 +10,7 @@ from typing import Any, Dict, List, TYPE_CHECKING
 import click
 
 if TYPE_CHECKING:
-    from tinker.types import TrainingRun
+    from api._tinker.types import TrainingRun
 
 from ..client import create_rest_client, handle_api_errors
 from ..context import CLIContext

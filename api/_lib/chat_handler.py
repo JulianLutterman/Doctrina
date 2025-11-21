@@ -1,18 +1,20 @@
 # Refactored chat handler
 import json
 import asyncio
+import traceback
+from concurrent.futures import ThreadPoolExecutor
 from api._lib.model_utils import resolve_model_alias
 
 try:
     from api import _tinker as tinker
     from api._tinker import types
     TINKER_AVAILABLE = True
-except ImportError:
+except Exception:
     try:
         import tinker
         from tinker import types
         TINKER_AVAILABLE = True
-    except ImportError:
+    except Exception:
         TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
@@ -33,6 +35,9 @@ def get_tokenizer_wrapper(model_name: str):
             return Tokenizer.from_pretrained("gpt2")
 
 async def process_chat(data):
+    if not TINKER_AVAILABLE:
+        return {"error": "Tinker library not available"}
+
     model_alias = data.get("model")
     messages = data.get("messages")
 
@@ -83,6 +88,20 @@ async def process_chat(data):
         "tokens": seq.tokens
     }
 
+def run_async(coro):
+    """Runs an async coroutine in a way that works even if an event loop is already running."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        return asyncio.run(coro)
+
 def handle_chat(req_handler):
     if req_handler.command != "POST":
         req_handler.send_response(405)
@@ -94,12 +113,13 @@ def handle_chat(req_handler):
     data = json.loads(body)
 
     try:
-        result = asyncio.run(process_chat(data))
-        req_handler.send_response(200)
+        result = run_async(process_chat(data))
+        status = 500 if "error" in result and result["error"] != "Tinker library not available" else 200
+        req_handler.send_response(status)
         req_handler.send_header('Content-Type', 'application/json')
         req_handler.end_headers()
         req_handler.wfile.write(json.dumps(result).encode())
     except Exception as e:
         req_handler.send_response(500)
         req_handler.end_headers()
-        req_handler.wfile.write(json.dumps({"error": str(e)}).encode())
+        req_handler.wfile.write(json.dumps({"error": str(e), "traceback": traceback.format_exc()}).encode())

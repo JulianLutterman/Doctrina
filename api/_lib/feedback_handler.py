@@ -1,6 +1,8 @@
 import json
 import os
 import asyncio
+import traceback
+from concurrent.futures import ThreadPoolExecutor
 from api._lib.model_utils import resolve_model_alias
 from api._lib.registry import update_model_entry
 
@@ -8,12 +10,12 @@ try:
     from api import _tinker as tinker
     from api._tinker import types
     TINKER_AVAILABLE = True
-except ImportError:
+except Exception:
     try:
         import tinker
         from tinker import types
         TINKER_AVAILABLE = True
-    except ImportError:
+    except Exception:
         TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
@@ -34,6 +36,9 @@ def get_tokenizer_wrapper(model_name: str):
             return Tokenizer.from_pretrained("gpt2")
 
 async def process_feedback_logic(data):
+    if not TINKER_AVAILABLE:
+        raise ImportError("Tinker library not available")
+
     model_alias = data.get("model_alias")
     prompt = data.get("prompt")
     feedback_type = data.get("feedback_type")
@@ -172,6 +177,20 @@ async def process_feedback_logic(data):
 
     return base_model_name, new_id
 
+def run_async(coro):
+    """Runs an async coroutine in a way that works even if an event loop is already running."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        return asyncio.run(coro)
+
 def handle_feedback(req_handler):
     if req_handler.command != "POST":
         req_handler.send_response(405)
@@ -183,7 +202,7 @@ def handle_feedback(req_handler):
     data = json.loads(body)
 
     try:
-        base_model_name, new_model_id = asyncio.run(process_feedback_logic(data))
+        base_model_name, new_model_id = run_async(process_feedback_logic(data))
         update_model_entry(data.get("model_alias"), base_model_name, new_model_id)
 
         req_handler.send_response(200)
@@ -193,4 +212,4 @@ def handle_feedback(req_handler):
     except Exception as e:
         req_handler.send_response(500)
         req_handler.end_headers()
-        req_handler.wfile.write(json.dumps({"error": str(e)}).encode())
+        req_handler.wfile.write(json.dumps({"error": str(e), "traceback": traceback.format_exc()}).encode())

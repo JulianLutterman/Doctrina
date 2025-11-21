@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from tinker.types import RequestErrorCategory
+    from api._tinker.types import RequestErrorCategory
 
 
 class TinkerError(Exception):

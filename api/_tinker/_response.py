@@ -230,7 +230,7 @@ class BaseAPIResponse(Generic[R]):
                 f"{origin=} {issubclass(origin, BaseModel)=} {issubclass(origin, pydantic.BaseModel)=}"
             )
             raise TypeError(
-                "Pydantic models must subclass our base model type, e.g. `from tinker import BaseModel`"
+                "Pydantic models must subclass our base model type, e.g. `from api._tinker import BaseModel`"
             )
 
         if (
@@ -299,7 +299,7 @@ class APIResponse(BaseAPIResponse[R]):
         the `to` argument, e.g.
 
         ```py
-        from tinker import BaseModel
+        from api._tinker import BaseModel
 
 
         class MyModel(BaseModel):
@@ -401,7 +401,7 @@ class AsyncAPIResponse(BaseAPIResponse[R]):
         the `to` argument, e.g.
 
         ```py
-        from tinker import BaseModel
+        from api._tinker import BaseModel
 
 
         class MyModel(BaseModel):

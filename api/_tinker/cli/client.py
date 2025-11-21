@@ -12,7 +12,7 @@ from typing import TypeVar, Callable, Any, cast, TYPE_CHECKING
 from .exceptions import TinkerCliError
 
 if TYPE_CHECKING:
-    from tinker.lib.public_interfaces.rest_client import RestClient
+    from api._tinker.lib.public_interfaces.rest_client import RestClient
 
 
 def create_rest_client() -> "RestClient":
@@ -28,7 +28,7 @@ def create_rest_client() -> "RestClient":
         TinkerCliError: If client creation fails
     """
     # Lazy import to avoid slow startup
-    from tinker import ServiceClient
+    from api._tinker import ServiceClient
 
     try:
         service_client = ServiceClient()
@@ -71,7 +71,7 @@ def handle_api_errors(func: F) -> F:
     @wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         # Lazy import to avoid slow startup
-        from tinker._exceptions import (
+        from api._tinker._exceptions import (
             APIError,
             BadRequestError,
             AuthenticationError,
