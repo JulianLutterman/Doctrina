@@ -1,11 +1,11 @@
 # Refactored chat handler
 import json
 import asyncio
-from api.lib.model_utils import resolve_model_alias
+from api._lib.model_utils import resolve_model_alias
 
 try:
-    from api import tinker
-    from api.tinker import types
+    from api import _tinker as tinker
+    from api._tinker import types
     TINKER_AVAILABLE = True
 except ImportError:
     try:

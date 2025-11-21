@@ -1,9 +1,9 @@
 import asyncio
 import os
-from api.lib.registry import get_model_entry, update_model_entry
+from api._lib.registry import get_model_entry, update_model_entry
 
 try:
-    from api import tinker
+    from api import _tinker as tinker
     TINKER_AVAILABLE = True
 except ImportError:
     try:
