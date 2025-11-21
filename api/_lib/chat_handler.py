@@ -33,6 +33,9 @@ def get_tokenizer_wrapper(model_name: str):
             return Tokenizer.from_pretrained("gpt2")
 
 async def process_chat(data):
+    if not TINKER_AVAILABLE:
+        return {"error": "Tinker library not available"}
+
     model_alias = data.get("model")
     messages = data.get("messages")
 
@@ -95,7 +98,8 @@ def handle_chat(req_handler):
 
     try:
         result = asyncio.run(process_chat(data))
-        req_handler.send_response(200)
+        status = 500 if "error" in result and result["error"] != "Tinker library not available" else 200
+        req_handler.send_response(status)
         req_handler.send_header('Content-Type', 'application/json')
         req_handler.end_headers()
         req_handler.wfile.write(json.dumps(result).encode())

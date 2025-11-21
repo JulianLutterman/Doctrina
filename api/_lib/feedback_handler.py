@@ -34,6 +34,9 @@ def get_tokenizer_wrapper(model_name: str):
             return Tokenizer.from_pretrained("gpt2")
 
 async def process_feedback_logic(data):
+    if not TINKER_AVAILABLE:
+        raise ImportError("Tinker library not available")
+
     model_alias = data.get("model_alias")
     prompt = data.get("prompt")
     feedback_type = data.get("feedback_type")
