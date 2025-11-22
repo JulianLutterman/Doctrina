@@ -1,3 +1,7 @@
+import os
+# Set HF_HOME to /tmp before any other imports that might rely on it
+os.environ["HF_HOME"] = "/tmp"
+
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 from api._lib.models_handler import handle_models
