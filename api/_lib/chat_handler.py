@@ -9,12 +9,12 @@ try:
     from api import _tinker as tinker
     from api._tinker import types
     TINKER_AVAILABLE = True
-except Exception:
+except Exception as e:
     try:
         import tinker
         from tinker import types
         TINKER_AVAILABLE = True
-    except Exception:
+    except Exception as e2:
         TINKER_AVAILABLE = False
 
 def get_tokenizer_wrapper(model_name: str):
@@ -73,20 +73,27 @@ async def process_chat(data):
     model_input = types.ModelInput.from_ints(tokens=tokens)
     params = types.SamplingParams(max_tokens=512, temperature=0.7)
 
-    future = await client.sample_async(prompt=model_input, sampling_params=params, num_samples=1)
-    if hasattr(future, 'result_async'):
-            result = await future.result_async()
-    else:
-            result = future
+    try:
+        future = await client.sample_async(prompt=model_input, sampling_params=params, num_samples=1)
+        if hasattr(future, 'result_async'):
+                result = await future.result_async()
+        else:
+                result = future
 
-    seq = result.sequences[0]
-    output_text = tokenizer.decode(seq.tokens, skip_special_tokens=True)
+        seq = result.sequences[0]
+        output_text = tokenizer.decode(seq.tokens, skip_special_tokens=True)
 
-    return {
-        "output": output_text,
-        "logprobs": seq.logprobs,
-        "tokens": seq.tokens
-    }
+        return {
+            "output": output_text,
+            "logprobs": seq.logprobs,
+            "tokens": seq.tokens
+        }
+    except tinker.APIStatusError as e:
+        return {"error": str(e), "status_code": e.status_code}
+    except Exception as e:
+        print(f"Error processing chat: {e}")
+        traceback.print_exc()
+        return {"error": str(e)}
 
 def run_async(coro):
     """Runs an async coroutine in a way that works even if an event loop is already running."""
@@ -114,12 +121,21 @@ def handle_chat(req_handler):
 
     try:
         result = run_async(process_chat(data))
-        status = 500 if "error" in result and result["error"] != "Tinker library not available" else 200
+
+        status = 200
+        if "error" in result:
+             if "status_code" in result:
+                 status = result["status_code"]
+             elif result["error"] != "Tinker library not available":
+                 status = 500
+
         req_handler.send_response(status)
         req_handler.send_header('Content-Type', 'application/json')
         req_handler.end_headers()
         req_handler.wfile.write(json.dumps(result).encode())
     except Exception as e:
+        print(f"Error in handle_chat: {e}")
+        traceback.print_exc()
         req_handler.send_response(500)
         req_handler.end_headers()
-        req_handler.wfile.write(json.dumps({"error": str(e), "traceback": traceback.format_exc()}).encode())
+        req_handler.wfile.write(json.dumps({"error": "Internal Server Error"}).encode())
